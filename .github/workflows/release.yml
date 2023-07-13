@@ -82,7 +82,7 @@ jobs:
             "https://api.github.com/repos/${{ github.repository }}/releases/${{ steps.check_release.outputs.release_id }}"
 
       - name: Create Release
-        if: steps.check_release.outputs.release_id == null
+        if: steps.check_release.outputs.release_id != null
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
