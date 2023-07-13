@@ -6,6 +6,8 @@ on:
        - 'v\d+'
 
 jobs:
+  # call-build-workflow:
+  #   uses: ./.github/workflows/build-github-actions.yml
   create_issue:
     name: new Release
     runs-on: ubuntu-latest
@@ -15,34 +17,56 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      
       - name: Generate change log
+        id: get_tags
         run: |
-          CURRENT_TAG=${GITHUB_REF#refs/tags/}
-          PREVIOUS_TAG=$(git describe --abbrev=0 ${CURRENT_TAG}^) || echo "Initial commit"
-          echo ::set-output name=current::${CURRENT_TAG}
-          echo ::set-output name=previous::${PREVIOUS_TAG}
+          CURRENT_TAG=${{ github.ref_name }} 
+          TIMESTAMP=$(git show -s --format=%ai ${CURRENT_TAG})
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 ${CURRENT_TAG}^)
+          echo "current=${CURRENT_TAG}" >> "$GITHUB_OUTPUT"
+          echo "previous=${PREVIOUS_TAG}" >> "$GITHUB_OUTPUT"
+          echo "timestamp=${TIMESTAMP}" >> "$GITHUB_OUTPUT"
+
       - name: Generate changelog
         id: generate_log
         run: |
-          if [[ "${{ steps.get_tags.outputs.previous }}" == "Initial commit" ]]; then
-            CHANGELOG=$(git log --pretty=format:"- %s" "${{ steps.get_tags.outputs.current }}")
-          else
-            CHANGELOG=$(git log --pretty=format:"- %s" "${{ steps.get_tags.outputs.previous }}..${{ steps.get_tags.outputs.current }}")
-          fi
-          echo ::set-output name=log::"${CHANGELOG}"
+          CHANGELOG=$(git log --pretty=format:"- %s" "${{ steps.get_tags.outputs.previous }}...${{ steps.get_tags.outputs.current }}")
+          echo "log=${CHANGELOG}" >> "$GITHUB_OUTPUT"
+
       - name: Create team sync issue
         uses: imjohnbo/issue-bot@3d96848fb5e9a4a473bb81ae62b4b4866a56e93a
-        with:
-          assignees: "Beksultan"
-          labels: "RELEASE"
-          title: Release ${{ github.ref_name }}
-          body: |
-            ### Это релиз приложения версии ${{ github.ref_name }}
-            Авто релиза: ${{ github.actor }}
-            Время: ${{ steps.date.outputs.date }}
-            Changelog:
-            ${{ steps.generate_log.outputs.log }}
-          pinned: false
-          close-previous: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          assignees: "Beksultan2001"
+          labels: "RELEASE"
+          title: Release ${{ github.ref_name }} 
+          body: |
+            ### Это релиз приложения версии ${{ github.ref_name }}
+
+            Авто релиза: ${{ github.actor }}
+
+            Время: ${{ steps.get_tags.outputs.timestamp }}
+            
+            Changelog:
+
+            ${{ steps.generate_log.outputs.log }}
+            
+          pinned: false
+          close-previous: false
+
+  create_release_branch:
+    name: Create release branch
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
+
+      - name: Create release branch
+        run: |
+          BRANCH_NAME=release-${{ github.ref_name }}
+          git checkout -b $BRANCH_NAME
+          git push -u origin $BRANCH_NAME
