@@ -1,0 +1,45 @@
+name: release-actions
+run-name: ${{ github.actor }} is running release
+on:
+   push:
+     tags:
+       - 'v\d+'
+
+jobs:
+  create_issue:
+    name: new Release
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Generate change log
+        run: |
+          CURRENT_TAG=${GITHUB_REF#refs/tags/}
+          PREVIOUS_TAG=$(git describe --abbrev=0 ${CURRENT_TAG}^)
+          echo ::set-output name=current::${CURRENT_TAG}
+          echo ::set-output name=previous::${PREVIOUS_TAG}
+      - name: Generate changelog
+        id: generate_log
+        run: |
+          CHANGELOG=$(git log --pretty=format:"- %s" "${{ steps.get_tags.outputs.previous }}..${{ steps.get_tags.outputs.current }}")
+          echo ::set-output name=log::"${CHANGELOG}"
+
+      - name: Create team sync issue
+        uses: imjohnbo/issue-bot@3d96848fb5e9a4a473bb81ae62b4b4866a56e93a
+        with:
+          assignees: "Beksultan"
+          labels: "RELEASE"
+          title: Release ${{ github.ref_name }}
+          body: |
+            ### Это релиз приложения версии ${{ github.ref_name }}
+            Авто релиза: ${{ github.actor }}
+            Время: ${{ steps.date.outputs.date }}
+            Changelog:
+            ${{ steps.generate_log.outputs.log }}
+          pinned: false
+          close-previous: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

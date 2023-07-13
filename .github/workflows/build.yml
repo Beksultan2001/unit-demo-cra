@@ -1,0 +1,34 @@
+name: build app
+run-name: ${{ github.actor }} is running build
+
+on:
+  push:
+    branches: [ master, test ]
+
+jobs:
+  run-tests:
+    uses: ./.github/workflows/tests.yml
+
+  build:
+    needs:  run-tests
+    
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+      
+      - name: Install deps
+        run: npm ci
+    
+      - name: Build App
+        run: npm run build
+      
+        if: success()
+      - uses: actions/upload-artifact@v3
+        with:
+          name: build
+          path: build/
+          retention-days: 30  
