@@ -1,4 +1,4 @@
-name: release-github-actions
+name: release-workflow-actions
 run-name: ${{ github.actor }} is running release
 on:
    push:
@@ -34,7 +34,7 @@ jobs:
       - name: Create team sync issue
         uses: imjohnbo/issue-bot@3d96848fb5e9a4a473bb81ae62b4b4866a56e93a
         with:
-          assignees: "sr480"
+          assignees: "Beksultan2001"
           labels: "RELEASE"
           title: Release ${{ github.ref_name }}
           body: |
