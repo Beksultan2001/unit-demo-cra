@@ -1,4 +1,4 @@
-name: release-github-actions
+name: commitlint-github-actions
 run-name: ${{ github.actor }} is running release
 on:
   push:
