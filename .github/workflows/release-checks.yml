@@ -1,0 +1,44 @@
+name: Release Checks
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  run-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Run tests
+        run: |
+          # Add the commands to run your checks/tests here
+      
+  update-release:
+    needs: run-checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print workflow URL
+        run: echo "The current workflow run can be found at https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+      - name: Get Release info
+        id: get_release
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const { owner, repo } = context.repo
+            const tag_name = context.ref.replace('refs/tags/', '')
+            const release = await github.rest.repos.getReleaseByTag({ owner, repo, tag: tag_name })
+            return release.data
+          result-encoding: string
+      - name: Update release
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const run_id = process.env.GITHUB_RUN_ID
+            const { owner, repo } = context.repo
+            const release_id = ${{ steps.get_release.outputs.result }}
+            const link_to_checks = `https://github.com/${owner}/${repo}/actions/runs/${run_id}`
+            const body = `Checks completed! See the results [here](${link_to_checks}).`
+            github.rest.repos.updateRelease({ owner, repo, release_id, body })
