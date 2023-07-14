@@ -1,0 +1,44 @@
+name: Manage Release
+on: 
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag'
+        required: true
+
+jobs:
+  manage_release:
+    name: Manage Release
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - name: Check if release already exists
+        id: check_release
+        run: |
+          RESPONSE=$(curl \
+            --silent \
+            --request GET \
+            --header 'authorization: Bearer ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}' \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ github.event.inputs.tag }}")
+
+          RELEASE_ID=$(echo $RESPONSE | jq '.id')
+          echo ::set-output name=release_id::${RELEASE_ID}
+
+      - name: Update Release
+        if: steps.check_release.outputs.release_id != null
+        run: |
+          curl \
+            --request PATCH \
+            --header 'authorization: Bearer ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}' \
+            --header 'content-type: application/json' \
+            --data '{"body": "Updated body", "name": "Updated release name"}' \
+            "https://api.github.com/repos/${{ github.repository }}/releases/${{ steps.check_release.outputs.release_id }}"
+
+      - name: Create Release
+        if: steps.check_release.outputs.release_id == null
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN  }}
+        with:
+          tag_name: ${{ github.event.inputs.tag }}
+          release_name: Release ${{ github.event.inputs.tag }}
