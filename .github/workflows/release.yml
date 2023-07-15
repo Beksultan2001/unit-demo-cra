@@ -141,7 +141,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - name: Install dependencies and commitlint
+      - name: Install dependencies and commitlints
         uses: ./.github/actions/commitlint-tests
   deploy: 
     needs: [commit-lint, es-lint, e2e-tests, unit-tests]
