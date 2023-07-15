@@ -112,7 +112,7 @@ jobs:
             
       #       console.log('Release issue created or updated.');
       - name: Check if issue already exists and update
-        uses: actions/github-script@v5
+        uses: octokit/rest@v2
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
@@ -127,8 +127,11 @@ jobs:
 
             ${{ steps.generate_log.outputs.log }}`
             
+            const { Octokit } = require("@octokit/rest");
+            const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+            
             // Get issues
-            const issues = await github.issues.listForRepo({
+            const issues = await octokit.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
             });
@@ -138,7 +141,7 @@ jobs:
             
             if (issue) {
               // If issue exists, update it
-              await github.issues.update({
+              await octokit.rest.issues.update({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issue.number,
@@ -146,13 +149,14 @@ jobs:
               });
             } else {
               // If issue does not exist, create a new one
-              await github.issues.create({
+              await octokit.rest.issues.create({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 title,
                 body,
               });
             }
+
       
   # create_release_branch:
   #   name: Create release branch
