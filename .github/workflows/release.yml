@@ -48,8 +48,7 @@ jobs:
             }
   pr:
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
+    permissions: write-all
     needs: issue
     steps:
       - name: Checkout code
