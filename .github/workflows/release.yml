@@ -32,56 +32,138 @@ jobs:
           CHANGELOG=$(git log --pretty=format:"- %s" "${{ env.previous }}...${{ env.current }}")
           echo "log=${CHANGELOG}" >> "$GITHUB_ENV"
 
-      - name: Get existing issue
-        id: get_issue
-        uses: octokit/graphql-action@v2.x
-        with:
-          query: |
-            query($repo: String!, $owner: String!, $title: String!) {
-              repository(name: $repo, owner: $owner) {
-                issues(last: 1, filterBy: { states: OPEN, labels: "RELEASE", query: $title }) {
-                  nodes {
-                    id
-                  }
-                }
-              }
-            }
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.repository }}
-          title: "Release ${{ github.ref_name }}"
+      # - name: Get existing issue
+      #   id: get_issue
+      #   uses: octokit/graphql-action@v2.x
+      #   with:
+      #     query: |
+      #       query($repo: String!, $owner: String!, $title: String!) {
+      #         repository(name: $repo, owner: $owner) {
+      #           issues(last: 1, filterBy: { states: OPEN, labels: "RELEASE", query: $title }) {
+      #             nodes {
+      #               id
+      #             }
+      #           }
+      #         }
+      #       }
+      #     owner: ${{ github.repository_owner }}
+      #     repo: ${{ github.repository }}
+      #     title: "Release ${{ github.ref_name }}"
 
-      - name: Create or update issue
-        uses: octokit/request-action@v2.x
-        id: create_update_issue
-        with:
-          route: ${{ (steps.get_issue.outputs.data.repository.issues.nodes[0].id != '') && 'POST /repos/:owner/:repo/issues/:issue_number' || 'POST /repos/:owner/:repo/issues' }}
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.repository }}
-          issue_number: ${{ steps.get_issue.outputs.data.repository.issues.nodes[0].id }}
-          title: "Release ${{ github.ref_name }}"
-          body: |
-            ### Это релиз приложения версии ${{ github.ref_name }}
+      # - name: Create or update issue
+      #   uses: octokit/request-action@v2.x
+      #   id: create_update_issue
+      #   with:
+      #     route: ${{ (steps.get_issue.outputs.data.repository.issues.nodes[0].id != '') && 'POST /repos/:owner/:repo/issues/:issue_number' || 'POST /repos/:owner/:repo/issues' }}
+      #     owner: ${{ github.repository_owner }}
+      #     repo: ${{ github.repository }}
+      #     issue_number: ${{ steps.get_issue.outputs.data.repository.issues.nodes[0].id }}
+      #     title: "Release ${{ github.ref_name }}"
+      #     body: |
+      #       ### Это релиз приложения версии ${{ github.ref_name }}
 
+      #       Авто релиза: ${{ github.actor }}
+
+      #       Время: ${{ env.timestamp }}
+
+      #       Changelog:
+
+      #       ${{ env.log }}
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Create or update release issue
+      #   id: create_release_issue
+      #   uses: actions/github-script@v4
+      #   with:
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #     script: |
+      #       const { data: issues } = await github.search.issuesAndPullRequests({
+      #         q: `repo:${process.env.GITHUB_REPOSITORY} is:issue is:open label:RELEASE ${process.env.RELEASE_TAG}`,
+      #       });
+            
+      #       if (issues.total_count > 0) {
+      #         const existingIssueNumber = issues.items[0].number;
+      #         const existingIssueBody = issues.items[0].body;
+              
+      #         const updatedIssueBody = existingIssueBody.replace(
+      #           /Changelog:\n([\s\S]*)\nDeployment Link:/,
+      #           `Changelog:\n${process.env.CHANGELOG}\nDeployment Link: ${deploymentLink}`
+      #         );
+              
+      #         await github.issues.update({
+      #           owner: context.repo.owner,
+      #           repo: context.repo.repo,
+      #           issue_number: existingIssueNumber,
+      #           body: updatedIssueBody,
+      #         });
+              
+      #         console.log(`Updated existing release issue #${existingIssueNumber}`);
+      #       } else {
+      #         const newIssue = await github.issues.create({
+      #           owner: context.repo.owner,
+      #           repo: context.repo.repo,
+      #           title: `Release ${process.env.RELEASE_VERSION}`,
+      #           body: `Version: ${process.env.RELEASE_VERSION}\nChangelog:\n${process.env.CHANGELOG}`,
+      #           labels: ['RELEASE'],
+      #         });
+              
+      #         console.log(`Created new release issue #${newIssue.data.number}`);
+      #       }
+            
+      #       console.log('Release issue created or updated.');
+      - name: Check if issue already exists and update
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const title = `Release ${{ github.ref_name }}`
+            const body = `### Это релиз приложения версии ${{ github.ref_name }}
+            
             Авто релиза: ${{ github.actor }}
-
-            Время: ${{ env.timestamp }}
-
+            
+            Время: ${{ steps.get_tags.outputs.timestamp }}
+            
             Changelog:
 
-            ${{ env.log }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            ${{ steps.generate_log.outputs.log }}`
+            
+            // Get issues
+            const issues = await github.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            
+            // Check if issue with the same title already exists
+            const issue = issues.data.find(i => i.title === title);
+            
+            if (issue) {
+              // If issue exists, update it
+              await github.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body,
+              });
+            } else {
+              // If issue does not exist, create a new one
+              await github.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+              });
+            }
+      
+  # create_release_branch:
+  #   name: Create release branch
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         token: ${{ secrets.GH_ACCESS_TOKEN }}
 
-  create_release_branch:
-    name: Create release branch
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GH_ACCESS_TOKEN }}
-
-      - name: Create release branch
-        run: |
-          BRANCH_NAME=release-${{ github.ref_name }}
-          git checkout -b $BRANCH_NAME
-          git push -u origin $BRANCH_NAME
+  #     - name: Create release branch
+  #       run: |
+  #         BRANCH_NAME=release-${{ github.ref_name }}
+  #         git checkout -b $BRANCH_NAME
+  #         git push -u origin $BRANCH_NAME
