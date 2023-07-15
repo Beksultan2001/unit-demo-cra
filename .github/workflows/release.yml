@@ -31,25 +31,6 @@ jobs:
         run: |
           CHANGELOG=$(git log --pretty=format:"- %s" "${{ env.previous }}...${{ env.current }}")
           echo "log=${CHANGELOG}" >> "$GITHUB_ENV"
-
-      # - name: Get existing issue
-      #   id: get_issue
-      #   uses: octokit/graphql-action@v2.x
-      #   with:
-      #     query: |
-      #       query($repo: String!, $owner: String!, $title: String!) {
-      #         repository(name: $repo, owner: $owner) {
-      #           issues(last: 1, filterBy: { states: OPEN, labels: "RELEASE", query: $title }) {
-      #             nodes {
-      #               id
-      #             }
-      #           }
-      #         }
-      #       }
-      #     owner: ${{ github.repository_owner }}
-      #     repo: ${{ github.repository }}
-      #     title: "Release ${{ github.ref_name }}"
-
       # - name: Create or update issue
       #   uses: octokit/request-action@v2.x
       #   id: create_update_issue
@@ -71,91 +52,48 @@ jobs:
       #       ${{ env.log }}
       #   env:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # - name: Create or update release issue
-      #   id: create_release_issue
-      #   uses: actions/github-script@v4
-      #   with:
-      #     github-token: ${{ secrets.GITHUB_TOKEN }}
-      #     script: |
-      #       const { data: issues } = await github.search.issuesAndPullRequests({
-      #         q: `repo:${process.env.GITHUB_REPOSITORY} is:issue is:open label:RELEASE ${process.env.RELEASE_TAG}`,
-      #       });
-            
-      #       if (issues.total_count > 0) {
-      #         const existingIssueNumber = issues.items[0].number;
-      #         const existingIssueBody = issues.items[0].body;
-              
-      #         const updatedIssueBody = existingIssueBody.replace(
-      #           /Changelog:\n([\s\S]*)\nDeployment Link:/,
-      #           `Changelog:\n${process.env.CHANGELOG}\nDeployment Link: ${deploymentLink}`
-      #         );
-              
-      #         await github.issues.update({
-      #           owner: context.repo.owner,
-      #           repo: context.repo.repo,
-      #           issue_number: existingIssueNumber,
-      #           body: updatedIssueBody,
-      #         });
-              
-      #         console.log(`Updated existing release issue #${existingIssueNumber}`);
-      #       } else {
-      #         const newIssue = await github.issues.create({
-      #           owner: context.repo.owner,
-      #           repo: context.repo.repo,
-      #           title: `Release ${process.env.RELEASE_VERSION}`,
-      #           body: `Version: ${process.env.RELEASE_VERSION}\nChangelog:\n${process.env.CHANGELOG}`,
-      #           labels: ['RELEASE'],
-      #         });
-              
-      #         console.log(`Created new release issue #${newIssue.data.number}`);
-      #       }
-            
-      #       console.log('Release issue created or updated.');
-      - name: Check if issue already exists and update
-        uses: octokit/rest@v2
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            const title = `Release ${{ github.ref_name }}`
-            const body = `### Это релиз приложения версии ${{ github.ref_name }}
-            
-            Авто релиза: ${{ github.actor }}
-            
-            Время: ${{ steps.get_tags.outputs.timestamp }}
-            
-            Changelog:
 
-            ${{ steps.generate_log.outputs.log }}`
-            
-            const { Octokit } = require("@octokit/rest");
-            const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
-            
-            // Get issues
-            const issues = await octokit.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+      - name: Create or update release issue
+        id: create_release_issue
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: issues } = await github.search.issuesAndPullRequests({
+              q: `repo:${process.env.GITHUB_REPOSITORY} is:issue is:open label:RELEASE ${process.env.RELEASE_TAG}`,
             });
             
-            // Check if issue with the same title already exists
-            const issue = issues.data.find(i => i.title === title);
-            
-            if (issue) {
-              // If issue exists, update it
-              await octokit.rest.issues.update({
+            if (issues.total_count > 0) {
+              const existingIssueNumber = issues.items[0].number;
+              const existingIssueBody = issues.items[0].body;
+              
+              const updatedIssueBody = existingIssueBody.replace(
+                /Changelog:\n([\s\S]*)\nDeployment Link:/,
+                `Changelog:\n${process.env.CHANGELOG}\nDeployment Link: ${deploymentLink}`
+              );
+              
+              await github.issues.update({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: issue.number,
-                body,
+                issue_number: existingIssueNumber,
+                body: updatedIssueBody,
               });
+              
+              console.log(`Updated existing release issue #${existingIssueNumber}`);
             } else {
-              // If issue does not exist, create a new one
-              await octokit.rest.issues.create({
+              const newIssue = await github.issues.create({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                title,
-                body,
+                title: `Release ${process.env.RELEASE_VERSION}`,
+                body: `Version: ${process.env.RELEASE_VERSION}\nChangelog:\n${process.env.CHANGELOG}`,
+                labels: ['RELEASE'],
               });
+              
+              console.log(`Created new release issue #${newIssue.data.number}`);
             }
+            
+            console.log('Release issue created or updated.');
+     
 
       
   # create_release_branch:
