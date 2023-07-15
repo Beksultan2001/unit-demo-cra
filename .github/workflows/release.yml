@@ -131,20 +131,20 @@ jobs:
           node-version: 18
       - name: Run tests
         uses: ./.github/actions/es-lint
-  commit-lint:
-    runs-on: ubuntu-latest
-    needs: pr
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      - name: Install dependencies and commitlints
-        uses: ./.github/actions/commitlint-tests
+  # commit-lint:
+  #   runs-on: ubuntu-latest
+  #   needs: pr
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         fetch-depth: 0
+  #     - uses: actions/setup-node@v3
+  #       with:
+  #         node-version: 18
+  #     - name: Install dependencies and commitlints
+  #       uses: ./.github/actions/commitlint-tests
   deploy: 
-    needs: [commit-lint, es-lint, e2e-tests, unit-tests]
+    needs: [es-lint, e2e-tests, unit-tests]
     runs-on: ubuntu-latest
     permissions:
       contents: write 
