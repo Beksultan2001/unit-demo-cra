@@ -97,10 +97,7 @@ jobs:
             
       #       console.log(`${process.env.RELEASE_TAG}-tag, ${process.env.CHANGELOG}, changelog,Release issue created or updated.`);
      
-      - name: Check if issue already exists and update
-        uses: actions/checkout@v2
-        with:
-          repository: Beksultan2001/unit-demo-cra
+     - name: Check if issue already exists and update
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
