@@ -1,0 +1,57 @@
+name: Build
+
+on:
+  push:
+    branches:
+       - master
+jobs:
+  call-commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+            fetch-depth: 0
+      - name: Include Commitlint Workflow
+        uses: ./.github/actions/commitlint-tests
+  call-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+            fetch-depth: 0
+      - name: Include Tests Workflow
+        uses: ./.github/actions/es-lint
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+        contents: write 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies and build project
+        uses: ./.github/actions/build-project
+
+        if: success()
+
+      - name: Deploy to Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
+          publish_branch: gh-pages
+          allow_empty_commit: true
+          commit_message: 'Deploy to GitHub Pages'
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: build
+          path: build/
+          retention-days: 30
