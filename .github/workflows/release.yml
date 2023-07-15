@@ -6,7 +6,7 @@ on:
 jobs:
   issue:
     runs-on: ubuntu-latest
-    permissions: write
+    permissions: write-all
     outputs:
       issue_number: ${{ steps.create_issue.outputs.result }}
     steps:
@@ -48,7 +48,8 @@ jobs:
             }
   pr:
     runs-on: ubuntu-latest
-    permissions: write
+    permissions:
+      pull-requests: write
     needs: issue
     steps:
       - name: Checkout code
