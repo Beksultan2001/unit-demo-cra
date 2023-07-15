@@ -98,50 +98,65 @@ jobs:
       #       console.log(`${process.env.RELEASE_TAG}-tag, ${process.env.CHANGELOG}, changelog,Release issue created or updated.`);
      
       - name: Check if issue already exists and update
-        uses: octokit/rest
+        uses: actions/checkout@v2
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            const title = `Release ${{ github.ref_name }}`
-            const body = `### Это релиз приложения версии ${{ github.ref_name }}
-            
-            Авто релиза: ${{ github.actor }}
-            
-            Время: ${{ steps.get_tags.outputs.timestamp }}
-            
-            Changelog:
+          repository: Beksultan2001/unit-demo-cra
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          const core = require('@actions/core');
+          const github = require('@actions/github');
 
-            ${{ steps.generate_log.outputs.log }}`
-            
-            const { Octokit } = require("@octokit/rest");
-            const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
-            
-            // Get issues
-            const issues = await octokit.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-            });
-            
-            // Check if issue with the same title already exists
-            const issue = issues.data.find(i => i.title === title);
-            
-            if (issue) {
-              // If issue exists, update it
-              await octokit.rest.issues.update({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issue.number,
-                body,
+          async function main() {
+            try {
+              const owner = github.context.repo.owner;
+              const repo = github.context.repo.repo;
+              const ref = github.context.ref;
+              const title = `Release ${github.context.ref_name}`;
+              const body = `### Это релиз приложения версии ${{ github.ref_name }}
+              
+              Авто релиза: ${{ github.actor }}
+              
+              Время: ${{ steps.get_tags.outputs.timestamp }}
+              
+              Changelog:
+              
+              ${{ steps.generate_log.outputs.log }}`;
+
+              const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+
+              // Get issues
+              const { data: issues } = await octokit.rest.issues.listForRepo({
+                owner: owner,
+                repo: repo,
               });
-            } else {
-              // If issue does not exist, create a new one
-              await octokit.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title,
-                body,
-              });
+
+              // Check if issue with the same title already exists
+              const issue = issues.find((i) => i.title === title);
+
+              if (issue) {
+                // If issue exists, update it
+                await octokit.rest.issues.update({
+                  owner: owner,
+                  repo: repo,
+                  issue_number: issue.number,
+                  body: body,
+                });
+              } else {
+                // If issue does not exist, create a new one
+                await octokit.rest.issues.create({
+                  owner: owner,
+                  repo: repo,
+                  title: title,
+                  body: body,
+                });
+              }
+            } catch (error) {
+              core.setFailed(error.message);
             }
+          }
+
+          main();
 
       
   # create_release_branch:
