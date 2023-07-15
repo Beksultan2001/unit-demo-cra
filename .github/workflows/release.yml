@@ -82,7 +82,7 @@ jobs:
                 body: updatedIssueBody,
               });
               
-              console.log(`Updated existing release issue #${existingIssueNumber}`);
+              console.log(`Updated existing release issue #${existingIssueNumber}`,);
             } else {
               const newIssue = await github.issues.create({
                 owner: context.repo.owner,
@@ -95,7 +95,7 @@ jobs:
               console.log(`Created new release issue #${newIssue.data.number}`);
             }
             
-            console.log('Release issue created or updated.');
+            console.log(`${process.env.RELEASE_TAG}-tag, ${process.env.CHANGELOG}, changelog,Release issue created or updated.`);
      
 
       
