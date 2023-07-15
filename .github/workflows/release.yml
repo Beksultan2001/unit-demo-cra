@@ -26,11 +26,12 @@ jobs:
           echo "previous=${PREVIOUS_TAG}" >> "$GITHUB_ENV"
           echo "timestamp=${TIMESTAMP}" >> "$GITHUB_ENV"
 
-      - name: Generate changelog
-        id: generate_log
-        run: |
-          CHANGELOG=$(git log --pretty=format:"- %s" "${{ env.previous }}...${{ env.current }}")
-          echo "log=${CHANGELOG}" >> "$GITHUB_ENV"
+      # - name: Generate changelog
+      #   id: generate_log
+      #   run: |
+      #     CHANGELOG=$(git log --pretty=format:"- %s" "${{ env.previous }}...${{ env.current }}")
+      #     echo "log=${CHANGELOG}" >> "$GITHUB_ENV"
+      
       # - name: Create or update issue
       #   uses: octokit/request-action@v2.x
       #   id: create_update_issue
