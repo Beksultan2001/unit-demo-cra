@@ -2,7 +2,8 @@ name: Build
 
 on:
   push:
-    branches: [ master, test1 ]
+    branches:
+       - master
 jobs:
   call-commitlint:
     runs-on: ubuntu-latest
