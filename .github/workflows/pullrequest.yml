@@ -1,0 +1,73 @@
+name: Pull Request CI
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  run-commitlint-tests-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Run commitlinter
+        uses: ./.github/actions/commitlint-tests
+  run-es-lint-tests-pr:
+    needs: run-commitlint-tests-pr
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Run lint tests
+        uses: ./.github/actions/es-lint
+  merge-blocking:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install dependencies and test
+        uses: ./.github/actions/es-lint
+      - name: Check CI status
+        id: check_status
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: checks } = await github.checks.listForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha
+            });
+  
+            const failingChecks = checks.check_runs.filter((check) => check.conclusion === 'failure');
+  
+            if (failingChecks.length > 0) {
+              console.log('There are failing checks. Blocking merge.');
+  
+              core.setFailed('There are failing checks. Blocking merge.');
+            } else {
+              console.log('All checks passed. Allowing merge.');
+            }
+  
+      - name: Set merge status
+        if: ${{ failure() }}
+        run: echo "Merge blocked due to failing checks." && exit 1
