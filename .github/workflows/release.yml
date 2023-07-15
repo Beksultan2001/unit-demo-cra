@@ -31,7 +31,7 @@ jobs:
       #   run: |
       #     CHANGELOG=$(git log --pretty=format:"- %s" "${{ env.previous }}...${{ env.current }}")
       #     echo "log=${CHANGELOG}" >> "$GITHUB_ENV"
-      
+
       # - name: Create or update issue
       #   uses: octokit/request-action@v2.x
       #   id: create_update_issue
@@ -63,7 +63,9 @@ jobs:
             const { data: issues } = await github.search.issuesAndPullRequests({
               q: `repo:${process.env.GITHUB_REPOSITORY} is:issue is:open label:RELEASE ${process.env.RELEASE_TAG}`,
             });
-            
+
+            const deploymentLink = 'https://Beksultan2001.github.io/unit-demo-cra/';
+
             if (issues.total_count > 0) {
               const existingIssueNumber = issues.items[0].number;
               const existingIssueBody = issues.items[0].body;
