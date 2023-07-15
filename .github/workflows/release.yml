@@ -6,79 +6,45 @@ on:
        - 'v\d+'
 
 jobs:
-  create_or_update_issue:
-    name: Create or Update Release issue
+  issue:
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
+    permissions: write-all
+    outputs:
+      issue_number: ${{ steps.create_issue.outputs.result }}
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install auto-changelog
+        run: npm i -g auto-changelog
+      - name: Generate changelog
+        run: auto-changelog --commit-limit false --template keepachangelog
+      - name: Create Issue
+        id: create_issue
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const description = fs.readFileSync('CHANGELOG.md', 'utf8');
+            const [owner, repo] = '${{ github.repository }}'.split('/');
+            const version = '${{ github.ref_name }}';
+            const title = `Release ${version} by ${{ github.actor }}`;
+            const issue = { owner, repo, labels: ['RELEASE'] };
+            const issues = await github.rest.issues.listForRepo({ ...issue, state: 'all' });
+            const existingIssue = issues.data.find(i => i.title === title);
 
-      - name: Generate change log
-        id: get_tags
-        run: |
-          CURRENT_TAG=${{ github.ref_name }} 
-          TIMESTAMP=$(git show -s --format=%ai ${CURRENT_TAG})
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 ${CURRENT_TAG}^)
-          echo "current=${CURRENT_TAG}" >> "$GITHUB_ENV"
-          echo "previous=${PREVIOUS_TAG}" >> "$GITHUB_ENV"
-          echo "timestamp=${TIMESTAMP}" >> "$GITHUB_ENV"
-      - name: Check if issue already exists and update
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          run: |
-            const core = require('@actions/core');
-            const github = require('@actions/github');
-
-            async function main() {
-              try {
-                const owner = github.context.repo.owner;
-                const repo = github.context.repo.repo;
-                const ref = github.context.ref;
-                const title = `Release ${github.context.ref_name}`;
-                const body = `### Это релиз приложения версии ${{ github.ref_name }}
-                
-                Авто релиза: ${{ github.actor }}
-                
-                Время: ${{ steps.get_tags.outputs.timestamp }}
-                
-                Changelog:
-                
-                ${{ steps.generate_log.outputs.log }}`;
-
-                const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
-
-                // Get issues
-                const { data: issues } = await octokit.rest.issues.listForRepo({
-                  owner: owner,
-                  repo: repo,
-                });
-
-                // Check if issue with the same title already exists
-                const issue = issues.find((i) => i.title === title);
-
-                if (issue) {
-                  // If issue exists, update it
-                  await octokit.rest.issues.update({
-                    owner: owner,
-                    repo: repo,
-                    issue_number: issue.number,
-                    body: body,
-                  });
-                } else {
-                  // If issue does not exist, create a new one
-                  await octokit.rest.issues.create({
-                    owner: owner,
-                    repo: repo,
-                    title: title,
-                    body: body,
-                  });
-                }
-              } catch (error) {
-                core.setFailed(error.message);
-              }
+            if (existingIssue) {
+              const update = { ...issue, issue_number: existingIssue.number, body: description, state: 'open' };
+              await github.rest.issues.update(update);
+              return existingIssue.number;
+            } else {
+              const create = { ...issue, title: title, body: description };
+              const response = await github.rest.issues.create(create);
+              return response.data.number;
             }
-
-            main();
