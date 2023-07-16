@@ -14,7 +14,7 @@ if (container) {
   const store = initStore();
 
   root.render(
-    <BrowserRouter basename="/unit-demo-cra">
+    <BrowserRouter>
       <Provider store={store}>
         <Application />
       </Provider>
