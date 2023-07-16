@@ -53,11 +53,9 @@ jobs:
             if (existingIssue) {
               const update = { ...issue, issue_number: existingIssue.number, body: truncatedDescription, state: 'open' };
               await github.rest.issues.update(update);
-              return existingIssue.number;
             } else {
               const create = { ...issue, title: title, body: truncatedDescription };
               const response = await github.rest.issues.create(create);
-              return response.data.number;
             }
 
             
