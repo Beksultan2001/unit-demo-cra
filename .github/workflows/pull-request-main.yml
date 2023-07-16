@@ -5,12 +5,8 @@ on: [workflow_call]
 jobs:
   pull-request:
     runs-on: ubuntu-latest
+    permissions: write-all
     # needs: issue
-    permissions:
-      issues: write
-      pull-requests: write
-    outputs:
-      issue_number: ${{ needs.issue.outputs.issue_number }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -20,6 +16,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+
       - name: Initialize mandatory git config
         run: |
           git config user.name "GitHub Actions"
@@ -29,6 +26,7 @@ jobs:
           git checkout -b release-${{ github.ref_name }}
       - name: Push the branch
         run: git push origin release-${{ github.ref_name }}
+
       - name: Create or Update Pull Request
         id: create_or_update_pr
         uses: actions/github-script@v6
@@ -39,13 +37,13 @@ jobs:
             const base = 'master';
             const head = `release-${{ github.ref_name }}`;
             const issue_number = ${{ needs.issue.outputs.issue_number }};
-            const prBody = `This is a pull request for release. Closes #${issue_number}`;
+            const prBody = `This is a pull request for release. Closes #` + issue_number;
             const title = `Release ${head} by ${{ github.actor }}`;
             const pr = { owner, repo, base, head, body: prBody, title };
-
+  
             const pulls = await github.rest.pulls.list({ owner, repo, state: 'open', head: `${owner}:${head}` });
             const existingPr = pulls.data.find(p => p.title === title);
-
+  
             if (existingPr) {
               const update = { owner, repo, pull_number: existingPr.number, body: prBody };
               await github.rest.pulls.update(update);
