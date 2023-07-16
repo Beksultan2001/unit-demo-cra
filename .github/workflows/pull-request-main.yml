@@ -1,18 +1,18 @@
-name: Release process - Pull Request
+name: pull-create-request
+
 
 on: [workflow_call]
 
 jobs:
-  pull-request:
+  pull-create-request:
     runs-on: ubuntu-latest
     permissions: write-all
-    # needs: issue
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Set up Node.js
+      - name: Node js install
         uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -20,27 +20,3 @@ jobs:
       - name: Initialize git config, checkout, and push
         run: |
           git config user.name "GitHub Actions" && git config user.email noreply@github.com && git checkout -b release-${{ github.ref_name }} && git push origin release-${{ github.ref_name }}
-
-      - name: Create or Update Pull Request
-        id: create_or_update_pr
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const [owner, repo] = '${{ github.repository }}'.split('/');
-            const base = 'master';
-            const head = `release-${{ github.ref_name }}`;
-            const issue_number = process.env.GITHUB_REF;
-            const prBody = `This is a pull request for release. Closes #` + issue_number;
-            const title = `Release ${head} by ${{ github.actor }}`;
-            const pr = { owner, repo, base, head, body: prBody, title };
-  
-            const pulls = await github.rest.pulls.list({ owner, repo, state: 'open', head: `${owner}:${head}` });
-            const existingPr = pulls.data.find(p => p.title === title);
-  
-            if (existingPr) {
-              const update = { owner, repo, pull_number: existingPr.number, body: prBody };
-              await github.rest.pulls.update(update);
-            } else {
-              await github.rest.pulls.create({ ...pr });
-            }

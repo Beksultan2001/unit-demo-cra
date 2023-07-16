@@ -1,11 +1,9 @@
 name: Build
 
-on: workflow_dispatch
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
+on:
+  push:
+    branches:
+       - master
 
 jobs:
   check-tests:
@@ -27,7 +25,6 @@ jobs:
           node-version: '18'
       - name: install ci
         run: npm ci
-      - name: Build project
 
         if: success()
       - uses: actions/upload-artifact@v3
@@ -36,8 +33,7 @@ jobs:
           path: build/
           retention-days: 30
         
-      - name: Deploy to GitHub Pages
-        id: deployment
+      - name: Master Deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
         run: |
@@ -46,7 +42,7 @@ jobs:
           npx gh-pages -d build -u "github-actions-bot <support+actions@github.com>"
       
         if: success()
-      - name: Close Issue
+      - name: Close Deploy Issue
         env:
           GH_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
         run: |
