@@ -26,9 +26,11 @@ jobs:
       - name: install ci
         run: npm ci
       - name: 🎬 Build application
+        env:
+          BASE_URL: ${{ vars.BASE_URL }}
         run: |
-          PUBLIC_URL="/unit-demo-cra"
-          npm run build
+          PUBLIC_URL="${BASE_URL}" npm run build
+          echo "${BASE_URL}"
         
         if: success()
       - uses: actions/upload-artifact@v3

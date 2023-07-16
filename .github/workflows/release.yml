@@ -3,12 +3,7 @@ on:
   push:
     tags:
       - "v*"
-jobs:
-  check-tests:
-    name:  Check Tests
-    uses: ./.github/workflows/tests.yml
-
-  issue:
+ issue:
     runs-on: ubuntu-latest
     needs: check-tests
     permissions:
@@ -25,10 +20,15 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+      - name: Get last tag
+        id: last_tag
+        run: echo ::set-output name=tag::$(git describe --tags --abbrev=0)
       - name: Install auto-changelog
         run: npm i -g auto-changelog
       - name: Generate changelog
-        run: auto-changelog --commit-limit false --template keepachangelog
+        run: |
+          last_tag=$(echo "${{ steps.last_tag.outputs.tag }}")
+          auto-changelog --commit-limit false --template keepachangelog --output CHANGELOG.md --starting-commit $last_tag
       - name: Create Issue
         id: create_issue
         uses: actions/github-script@v6
@@ -39,11 +39,11 @@ jobs:
             const description = fs.readFileSync('CHANGELOG.md', 'utf8');
             const [owner, repo] = '${{ github.repository }}'.split('/');
             const version = '${{ github.ref_name }}';
-            const title = `Release ${version} by ${{ github.actor }}`;
             const issue = { owner, repo, labels: ['RELEASE'] };
+            
             const issues = await github.rest.issues.listForRepo({ ...issue, state: 'all' });
-            const existingIssue = issues.data.find(i => i.title === title);
 
+            const existingIssue = issues.data.find(i => i.title === `release version ${version}`);
 
             if (existingIssue) {
               const update = { ...issue, issue_number: existingIssue.number, body: description, state: 'open' };
@@ -54,7 +54,7 @@ jobs:
               const response = await github.rest.issues.create(create);
               return response.data.number;
             }
-  pr:
+  pull-requests:
     runs-on: ubuntu-latest
     permissions: write-all
     needs: issue
