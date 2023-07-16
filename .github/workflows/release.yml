@@ -5,7 +5,9 @@ on:
       - "v*"
 jobs:
   issue:
-    uses: ./.github/workflows/jobs/create-or-update-issue.yml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/workflows/jobs/issue.yml
   pr:
     runs-on: ubuntu-latest
     permissions: write-all
