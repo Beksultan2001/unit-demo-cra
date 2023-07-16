@@ -49,11 +49,11 @@ jobs:
             const title = `Release ${version} by ${{ github.actor }}`;
             const issue = { owner, repo, labels: ['RELEASE'] };
             const issues = await github.rest.issues.listForRepo({ ...issue, state: 'all' });
-            const existingIssue = issues.data.find(i => i.title === title);
-            if (existingIssue) {
-              const update = { ...issue, issue_number: existingIssue.number, body: truncatedDescription, state: 'open' };
+            const isThere = issues.data.find(i => i.title === title);
+            if (isThere) {
+              const update = { ...issue, issue_number: isThere.number, body: truncatedDescription, state: 'open' };
               await github.rest.issues.update(update);
-              return existingIssue.number;
+              return isThere.number;
             } else {
               const create = { ...issue, title: title, body: truncatedDescription };
               const response = await github.rest.issues.create(create);
