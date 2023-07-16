@@ -42,7 +42,7 @@ jobs:
                 owner,
                 repo,
                 issue_number: existingIssue.number,
-                body: fs.readFileSync('CHANGELOG.md', 'utf8'),
+                body: 'test',
                 state: 'open',
                 labels: ['RELEASE'],
               });
@@ -51,7 +51,7 @@ jobs:
                 owner,
                 repo,
                 title,
-                body: fs.readFileSync('CHANGELOG.md', 'utf8'),
+                body: 'test',
                 labels: ['RELEASE'],
               });
             }
