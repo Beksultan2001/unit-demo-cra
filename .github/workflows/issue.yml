@@ -1,0 +1,48 @@
+name: Release process - Issue
+
+on: [workflow_call]
+
+jobs:
+  issue:
+    runs-on: ubuntu-latest
+    needs: check-tests
+    permissions:
+      issues: write
+      pull-requests: write
+    outputs:
+      issue_number: ${{ steps.create_issue.outputs.result }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install auto-changelog
+        run: npm i -g auto-changelog
+      - name: Generate changelog
+        run: auto-changelog --commit-limit false --template keepachangelog
+      - name: Create Issue
+        id: create_issue
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const changelogDescription = fs.readFileSync('CHANGELOG.md', 'utf8');
+            const [organization, repository] = '${{ github.repository }}'.split('/');
+            const version = '${{ github.ref_name }}';
+            const issueTitle = `Release ${version} by ${{ github.actor }}`;
+            const issueLabels = { owner: organization, repo: repository, labels: ['RELEASE'] };
+            const issuesList = await github.rest.issues.listForRepo({ ...issueLabels, state: 'all' });
+            const existingIssue = issuesList.data.find(i => i.title === issueTitle);
+
+            if (existingIssue) {
+              const updateIssue = { ...issueLabels, issue_number: existingIssue.number, body: changelogDescription, state: 'open' };
+              await github.rest.issues.update(updateIssue);
+            } else {
+              const createIssue = { ...issueLabels, title: issueTitle, body: changelogDescription };
+              await github.rest.issues.create(createIssue);
+            }
