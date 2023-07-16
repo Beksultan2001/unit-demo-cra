@@ -15,7 +15,7 @@ jobs:
   pr:
     runs-on: ubuntu-latest
     permissions: write-all
-    needs: issue.issue  # 'issue' refers to the workflow name, and 'issue' refers to the job name in the 'issue.yml' workflow
+    needs: issue
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -45,7 +45,7 @@ jobs:
             const [owner, repo] = '${{ github.repository }}'.split('/');
             const base = 'master';
             const head = `release-${{ github.ref_name }}`;
-            const issue_number = ${{ needs.issue.issue.outputs.issue_number }};  // This will get the issue number from the 'issue' job
+            const issue_number = '5';
             const prBody = `This is a pull request for release. Closes #` + issue_number;
             const title = `Release ${head} by ${{ github.actor }}`;
             const pr = { owner, repo, base, head, body: prBody, title };
