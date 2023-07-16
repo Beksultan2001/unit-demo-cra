@@ -6,13 +6,12 @@ jobs:
   pull-request:
     runs-on: ubuntu-latest
     permissions: write-all
-    # needs: issue
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Set up Node.js
+      - name: Node js install
         uses: actions/setup-node@v3
         with:
           node-version: 18
