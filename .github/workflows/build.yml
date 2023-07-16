@@ -25,7 +25,12 @@ jobs:
           node-version: '18'
       - name: install ci
         run: npm ci
-
+    
+      - name: Build Project
+        env:
+          BASE_URL: ${{ vars.BASE_URL }}
+        run: PUBLIC_URL="${BASE_URL}" npm run build
+        
         if: success()
       - uses: actions/upload-artifact@v3
         with:
@@ -33,7 +38,8 @@ jobs:
           path: build/
           retention-days: 30
         
-      - name: Master Deploy
+      - name: Deploy to GitHub Pages
+        id: deployment
         env:
           GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
         run: |
@@ -42,7 +48,7 @@ jobs:
           npx gh-pages -d build -u "github-actions-bot <support+actions@github.com>"
       
         if: success()
-      - name: Close Deploy Issue
+      - name: Close Issue
         env:
           GH_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
         run: |
