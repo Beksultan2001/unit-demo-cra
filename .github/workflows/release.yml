@@ -9,6 +9,8 @@ jobs:
     steps:
       - name: Install issue
         uses: ./.github/actions/issue
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
   pr:
     runs-on: ubuntu-latest
     permissions: write-all
