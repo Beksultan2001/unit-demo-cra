@@ -45,7 +45,7 @@ jobs:
             const [owner, repo] = '${{ github.repository }}'.split('/');
             const base = 'master';
             const head = `release-${{ github.ref_name }}`;
-            const issue_number = ${{ needs.issue.outputs.issue_number }};
+            const issue_number = ${{ needs.issue.issue.outputs.issue_number }};  // This will get the issue number from the 'issue' job
             const prBody = `This is a pull request for release. Closes #` + issue_number;
             const title = `Release ${head} by ${{ github.actor }}`;
             const pr = { owner, repo, base, head, body: prBody, title };
