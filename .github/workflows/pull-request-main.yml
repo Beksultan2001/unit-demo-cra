@@ -6,7 +6,6 @@ jobs:
   pull-request:
     runs-on: ubuntu-latest
     permissions: write-all
-    # needs: issue
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -17,15 +16,9 @@ jobs:
         with:
           node-version: 18
 
-      - name: Initialize mandatory git config
+      - name: Initialize git config, checkout, and push
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email noreply@github.com
-      - name: Git checkout
-        run: |
-          git checkout -b release-${{ github.ref_name }}
-      - name: Push the branch
-        run: git push origin release-${{ github.ref_name }}
+          git config user.name "GitHub Actions" && git config user.email noreply@github.com && git checkout -b release-${{ github.ref_name }} && git push origin release-${{ github.ref_name }}
 
       - name: Create or Update Pull Request
         id: create_or_update_pr
@@ -33,20 +26,10 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const [owner, repo] = '${{ github.repository }}'.split('/');
-            const base = 'master';
-            const head = `release-${{ github.ref_name }}`;
-            const issue_number = process.env.GITHUB_REF;
-            const prBody = `This is a pull request for release. Closes #` + issue_number;
-            const title = `Release ${head} by ${{ github.actor }}`;
-            const pr = { owner, repo, base, head, body: prBody, title };
-  
-            const pulls = await github.rest.pulls.list({ owner, repo, state: 'open', head: `${owner}:${head}` });
-            const existingPr = pulls.data.find(p => p.title === title);
-  
-            if (existingPr) {
-              const update = { owner, repo, pull_number: existingPr.number, body: prBody };
-              await github.rest.pulls.update(update);
+            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+            const checkIfExists = (await github.rest.pulls.list({ owner, repo, state: 'open', head: `${owner}:release-${process.env.GITHUB_REF}` })).data.find(p => p.title === `Release release-${process.env.GITHUB_REF} by ${process.env.GITHUB_ACTOR}`);
+            if (checkIfExists) {
+              await github.rest.pulls.update({ owner, repo, pull_number: existingPr.number, body: `This is a pull request for release. Closes #${process.env.GITHUB_REF}` });
             } else {
-              await github.rest.pulls.create({ ...pr });
+              await github.rest.pulls.create({ owner, repo, base: 'master', head: `release-${process.env.GITHUB_REF}`, body: `This is a pull request for release. Closes #${process.env.GITHUB_REF}`, title: `Release release-${process.env.GITHUB_REF} by ${process.env.GITHUB_ACTOR}` });
             }
