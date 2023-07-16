@@ -1,9 +1,11 @@
 name: Build
 
-on:
-  push:
-    branches:
-       - master
+on: workflow_dispatch
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 
 jobs:
   check-tests:
@@ -25,11 +27,8 @@ jobs:
           node-version: '18'
       - name: install ci
         run: npm ci
-      - name: 🎬 Build application
-        run: |
-          PUBLIC_URL="/unit-demo-cra"
-          npm run build
-        
+      - name: Build project
+
         if: success()
       - uses: actions/upload-artifact@v3
         with:
@@ -56,6 +55,6 @@ jobs:
           ISSUE_ID=$(gh issue list --json number,title,labels -q \
             ".[] | select(.title == \"${ISSUE_TITLE}\" and .labels[].name == \"RELEASE\") | .number")
           if [ ! -z "$ISSUE_ID" ]; then
-            gh issue close $ISSUE_ID -c "[Deployment done](https://sr480.github.io/unit-demo-cra/)" -r "completed"
+            gh issue close $ISSUE_ID -c "[Deployment done](https://Beksultan2001.github.io/unit-demo-cra/)" -r "completed"
           fi
           
