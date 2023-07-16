@@ -3,7 +3,8 @@ name: Release process - Issue
 on: [workflow_call]
 
 jobs:
-   runs-on: ubuntu-latest
+  issue:
+    runs-on: ubuntu-latest
     # needs: check-tests
     permissions:
       issues: write
@@ -33,7 +34,7 @@ jobs:
             const description = fs.readFileSync('CHANGELOG.md', 'utf8');
             const [owner, repo] = '${{ github.repository }}'.split('/');
             const version = '${{ github.ref_name }}';
-            const title = `release version ${version}`;
+            const title = `Release ${version} by ${{ github.actor }}`;
             const issue = { owner, repo, labels: ['RELEASE'] };
             const issues = await github.rest.issues.listForRepo({ ...issue, state: 'all' });
             const existingIssue = issues.data.find(i => i.title === title);
