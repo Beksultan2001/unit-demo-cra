@@ -1,3 +1,7 @@
+const core = require('@actions/core');
+const github = require('@actions/github');
+const exec = require('@actions/exec');
+
 const fs = require('fs');
 const description = fs.readFileSync('CHANGELOG.md', 'utf8');
 const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
