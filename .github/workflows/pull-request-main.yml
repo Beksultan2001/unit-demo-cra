@@ -6,7 +6,7 @@ jobs:
   pull-request:
     runs-on: ubuntu-latest
     permissions: write-all
-    needs: issue
+    # needs: issue
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
