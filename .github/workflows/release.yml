@@ -3,7 +3,12 @@ on:
   push:
     tags:
       - "v*"
- issue:
+jobs:
+  check-tests:
+    name:  Check Tests
+    uses: ./.github/workflows/tests.yml
+
+  issue:
     runs-on: ubuntu-latest
     needs: check-tests
     permissions:
