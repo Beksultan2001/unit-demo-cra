@@ -42,7 +42,7 @@ jobs:
           npx gh-pages -d build -u "github-actions-bot <support+actions@github.com>"
       
         if: success()
-      - name: Issue Close
+      - name: Close Deploy Issue
         env:
           GH_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
         run: |
