@@ -15,6 +15,6 @@ jobs:
     uses: ./.github/workflows/issue.yml
 
   pull-request:
-    name: pull-request
-    uses: ./.github/workflows/pull_request.yml
+    name: pull-request-main
+    uses: ./.github/workflows/pull_request-main.yml
 
