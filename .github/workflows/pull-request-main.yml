@@ -27,20 +27,11 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const [owner, repo] = '${{ github.repository }}'.split('/');
-            const base = 'master';
-            const head = `release-${{ github.ref_name }}`;
-            const issue_number = process.env.GITHUB_REF;
-            const prBody = `This is a pull request for release. Closes #` + issue_number;
-            const title = `Release ${head} by ${{ github.actor }}`;
-            const pr = { owner, repo, base, head, body: prBody, title };
-  
-            const pulls = await github.rest.pulls.list({ owner, repo, state: 'open', head: `${owner}:${head}` });
-            const existingPr = pulls.data.find(p => p.title === title);
-  
-            if (existingPr) {
-              const update = { owner, repo, pull_number: existingPr.number, body: prBody };
-              await github.rest.pulls.update(update);
-            } else {
-              await github.rest.pulls.create({ ...pr });
-            }
+            const [o,r]=process.env.GITHUB_REPOSITORY.split('/'),
+            b='master',h=`release-${process.env.GITHUB_REF}`,
+            p=`Ppull-request #`+process.env.GITHUB_REF,
+            t=`Release ${h} by ${process.env.GITHUB_ACTOR}`,
+            i={owner:o,repo:r,state:'open',head:`${o}:${h}`},
+            u=await github.rest.pulls.list(i),
+            e=u.data.find(t=>t.title===t);
+            e?await github.rest.pulls.update({owner:o,repo:r,pull_number:e.number,body:p}):await github.rest.pulls.create({owner:o,repo:r,base:b,head:h,body:p,title:t});
