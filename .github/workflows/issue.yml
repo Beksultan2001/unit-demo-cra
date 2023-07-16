@@ -55,7 +55,7 @@ jobs:
               const issuesList = await github.rest.issues.listForRepo({ owner, repo, labels: ['RELEASE'], state: 'all' });
               const existingIssue = issuesList.data.find(issue => issue.title === title);
 
-              const textTemp` ### Это релиз приложения версии ${{ github.ref_name }}
+              const textTemp=` ### Это релиз приложения версии ${{ github.ref_name }}
 
               Автор релиза: ${{ github.actor }}
 
