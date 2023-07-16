@@ -1,5 +1,5 @@
-name: commitlint-github-actions
-run-name: ${{ github.actor }} is running commit lint
+name: lint commits
+run-name: lint commits
 on: [push, pull_request]
 jobs:
   commitlint:

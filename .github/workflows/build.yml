@@ -36,8 +36,7 @@ jobs:
           path: build/
           retention-days: 30
         
-      - name: Deploy to GitHub Pages
-        id: deployment
+      - name: deploy merge
         env:
           GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
         run: |
