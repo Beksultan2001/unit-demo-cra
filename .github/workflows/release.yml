@@ -4,13 +4,13 @@ on:
     tags:
       - "v*"
 jobs:
-  call-test-workflow:
-    name: 🧪🐞🪲 Run tests
-    uses: ./.github/workflows/test-github-actions.yml
+  check-tests:
+    name:  Check Tests
+    uses: ./.github/workflows/tests.yml
 
   issue:
     runs-on: ubuntu-latest
-    needs: call-test-workflow
+    needs: check-tests
     permissions:
       issues: write
       pull-requests: write
@@ -43,6 +43,8 @@ jobs:
             const issue = { owner, repo, labels: ['RELEASE'] };
             const issues = await github.rest.issues.listForRepo({ ...issue, state: 'all' });
             const existingIssue = issues.data.find(i => i.title === title);
+
+
             if (existingIssue) {
               const update = { ...issue, issue_number: existingIssue.number, body: description, state: 'open' };
               await github.rest.issues.update(update);

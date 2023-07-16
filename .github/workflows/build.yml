@@ -4,21 +4,15 @@ on:
   push:
     branches:
        - master
-       
-permissions:
-  contents: read
-  pages: write
-  id-token: write
 
 jobs:
-  call-test-workflow:
-    name: 🧪🐞🪲 Run tests
-    uses: ./.github/workflows/test-github-actions.yml
+  check-tests:
+    name: check-tests
+    uses: ./.github/workflows/tests.yml
 
-
-  build-deploy:
-    needs: call-test-workflow
-    name: 🌍🚀🌖 Build and deploy
+  build-or-deploy:
+    needs: check-tests
+    name: Build-deploy-project
     runs-on: ubuntu-latest
       
     steps:
@@ -29,10 +23,8 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '18'
-        
-      - name: ⚙️ Install deps
+      - name: install ci
         run: npm ci
-    
       - name: 🎬 Build application
         run: |
           PUBLIC_URL="/unit-demo-cra"

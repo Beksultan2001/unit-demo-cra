@@ -1,6 +1,6 @@
 name: commitlint-github-actions
 run-name: 🧅 ${{ github.actor }} is running commit lint
-on: [push, pull_request, workflow_call]
+on: [push, pull_request]
 jobs:
   commitlint:
     name: 🧅 Verify commit message
