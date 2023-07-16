@@ -3,8 +3,8 @@ run-name: check-tests
 on: [pull_request, workflow_call]
 
 jobs:
-  setup:
-    name: ⚙️ Install node modules
+  install-modules:
+    name: install-modules
     runs-on: ubuntu-latest
 
     steps:
