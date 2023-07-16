@@ -25,7 +25,7 @@ jobs:
           node-version: '18'
       - name: install ci
         run: npm ci
-      - name: 🎬 Build application
+      - name: Build application
         env:
           BASE_URL: ${{ vars.BASE_URL }}
         run: |
