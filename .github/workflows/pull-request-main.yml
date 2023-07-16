@@ -1,9 +1,10 @@
-name: Release process - Pull Request
+name: pull-create-request
+
 
 on: [workflow_call]
 
 jobs:
-  pull-request:
+  pull-create-request:
     runs-on: ubuntu-latest
     permissions: write-all
     steps:
