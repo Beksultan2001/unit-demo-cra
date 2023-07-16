@@ -16,5 +16,6 @@ jobs:
 
   pull-request:
     name: pull-request-main
+    needs: issue
     uses: ./.github/workflows/pull-request-main.yml
 
