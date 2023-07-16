@@ -5,62 +5,53 @@ on: [workflow_call]
 jobs:
   issue:
     runs-on: ubuntu-latest
-    # needs: check-tests
     permissions:
       issues: write
       pull-requests: write
+
+    outputs:
+      issue_number: ${{ steps.create_issue.outputs.result }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
+
       - name: Install auto-changelog
         run: npm i -g auto-changelog
+        
       - name: Generate changelog
         run: auto-changelog --commit-limit false --template keepachangelog
-      - name: Create 
+
+      - name: Create Issue
+        id: create_issue
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-          
             const fs = require('fs');
+            const description = fs.readFileSync('CHANGELOG.md', 'utf8');
+            const [owner, repo] = '${{ github.repository }}'.split('/');
+            const version = '${{ github.ref_name }}';
+            const title = `Release ${version} by ${{ github.actor }}`;
+            const issue = { owner, repo, labels: ['RELEASE'] };
+            const issues = await github.rest.issues.listForRepo({ ...issue, state: 'all' });
+            const existingIssue = issues.data.find(i => i.title === title);
 
-            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-            const version = process.env.GITHUB_REF;
-            const title = `Release ${version}`;
-
-            const issuesList = await github.rest.issues.listForRepo({ owner, repo, labels: ['RELEASE'], state: 'all' });
-            const existingIssue = issuesList.data.find(issue => issue.title === title);
-            let issueBody = `
-            ## Кто автор?
-            Beksultan
-
-            ## Когда был создан релиз?
-
-            ## Какая версия у релиза?
-            `;
             if (existingIssue) {
-              await github.rest.issues.update({
-                owner,
-                repo,
-                issue_number: existingIssue.number,
-                body: issueBody,
-                state: 'open',
-                labels: ['RELEASE'],
-              });
+              const update = { ...issue, issue_number: existingIssue.number, body: description, state: 'open' };
+              await github.rest.issues.update(update);
+              return existingIssue.number;
             } else {
-              await github.rest.issues.create({
-                owner,
-                repo,
-                title,
-                body: issueBody,
-                labels: ['RELEASE'],
-              });
+              const create = { ...issue, title: title, body: description };
+              const response = await github.rest.issues.create(create);
+              return response.data.number;
             }
 
             
