@@ -4,25 +4,18 @@ on:
   push:
     branches:
        - master
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
-  # call-commitlint:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v3
-  #       with:
-  #           fetch-depth: 0
-  #     - name: Include Commitlint Workflow
-  #       uses: ./.github/actions/commitlint-tests
+
   call-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-            fetch-depth: 0
-      - name: Include Tests Workflow
-        uses: ./.github/actions/es-lint
+    name: 🧪🐞🪲 Run tests
+    uses: ./.github/workflows/test-github-actions.yml
+
   build:
     runs-on: ubuntu-latest
     permissions:
@@ -41,26 +34,27 @@ jobs:
 
         if: success()
 
-      # - name: Deploy to Pages
-      #   uses: peaceiris/actions-gh-pages@v3
-      #   with:
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-      #     publish_dir: ./build
-      #     publish_branch: gh-pages
-      #     allow_empty_commit: true
-      #     commit_message: 'Deploy to GitHub Pages'
+      - name: Deploy to Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
+          publish_branch: gh-pages
+          allow_empty_commit: true
+          commit_message: 'Deploy to GitHub Pages'
 
       - uses: actions/upload-artifact@v3
         with:
           name: build
           path: build/
           retention-days: 30
-      - name: Deploy to GitHub Pages1
-        id: deployment
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
-        run: |
-          npm i gh-pages
-          git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
-          npx gh-pages -d build -u "github-actions-bot <support+actions@github.com>"
+          
+      # - name: Deploy to GitHub Pages1
+      #   id: deployment
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+      #   run: |
+      #     npm i gh-pages
+      #     git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
+      #     npx gh-pages -d build -u "github-actions-bot <support+actions@github.com>"
 
