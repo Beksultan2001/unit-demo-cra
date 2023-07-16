@@ -43,7 +43,6 @@ jobs:
             const issue = { owner, repo, labels: ['RELEASE'] };
             const issues = await github.rest.issues.listForRepo({ ...issue, state: 'all' });
             const existingIssue = issues.data.find(i => i.title === title);
-            console.log(description,'description',typeof description)
             if (existingIssue) {
               const update = { ...issue, issue_number: existingIssue.number, body: description, state: 'open' };
               await github.rest.issues.update(update);
