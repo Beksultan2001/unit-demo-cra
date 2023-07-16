@@ -7,10 +7,12 @@ jobs:
   issue:
     runs-on: ubuntu-latest
     steps:
-      - name: Install issue
-        uses: ./.github/actions/issue
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          node-version: 18
+      - name: Install issue
+        uses: ./.github/actions/issues
   pr:
     runs-on: ubuntu-latest
     permissions: write-all
