@@ -41,8 +41,8 @@ jobs:
             const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
             // Truncate the description if it exceeds the maximum length
             const truncatedDescription = changelog.length > MAX_BODY_LENGTH
-              ? description.slice(0, MAX_BODY_LENGTH)
-              : description;
+              ? changelog.slice(0, MAX_BODY_LENGTH)
+              : changelog;
 
             const [main, release] = '${{ github.repository }}'.split('/');
             const ref_name = '${{ github.ref_name }}';
@@ -51,13 +51,11 @@ jobs:
             const listForRepo = await github.rest.issues.listForRepo({ ...issue, state: 'all' });
             const isThere = listForRepo.data.find(i => i.title === mainTitle);
             if (isThere) {
-              const update = { ...temp, issue_number: isThere.number, body: truncatedDescription, state: 'open' };
-              await github.rest.issues.update(update);
-              return isThere.number;
+              const req = { ...temp, issue_number: isThere.number, body: truncatedDescription, state: 'open' };
+              await github.rest.issues.update(req);
             } else {
-              const create = { ...temp, title: mainTitle, body: truncatedDescription };
-              const response = await github.rest.issues.create(create);
-              return response.data.number;
+              const req = { ...temp, title: mainTitle, body: truncatedDescription };
+              await github.rest.issues.create(req);
             }
 
             
