@@ -3,9 +3,8 @@ on:
   push:
     tags:
       - "v*"
-
 jobs:
-  create_or_update_issue:
+  create_issue:
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -25,7 +24,7 @@ jobs:
         run: npm i -g auto-changelog
       - name: Generate changelog
         run: auto-changelog --commit-limit false --template keepachangelog
-      - name: Create or Update Issue
+      - name: Create Issue
         id: create_issue
         uses: actions/github-script@v6
         with:
@@ -48,4 +47,3 @@ jobs:
               const response = await github.rest.issues.create(create);
               return response.data.number;
             }
-
