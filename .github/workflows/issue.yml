@@ -34,35 +34,22 @@ jobs:
             const version = process.env.GITHUB_REF;
             const title = `Release ${version}`;
 
-            # const changelogContent = fs.readFileSync('CHANGELOG.md', 'utf8');
-
-            # // Define a regular expression to match the content between the last two tags
-            # const regex = /## \[.*?\].*?\n([\s\S]*?)(?=## \[.*?\].*?\n|$)/g;
-
-            # // Find all matches in the changelog content
-            # const matches = Array.from(changelogContent.matchAll(regex));
-
-            # // Get the content between the last two tags
-            # let contentBetweenLastTwoTags;
-            # if (matches.length >= 2) {
-            #   contentBetweenLastTwoTags = matches[matches.length - 2][1];
-            # } else if (matches.length === 1) {
-            #   // If there's only one match, consider it as the last tag
-            #   contentBetweenLastTwoTags = matches[0][1];
-            # } else {
-            #   // If there are no matches, set an empty string
-            #   contentBetweenLastTwoTags = '';
-            # }
-
             const issuesList = await github.rest.issues.listForRepo({ owner, repo, labels: ['RELEASE'], state: 'all' });
             const existingIssue = issuesList.data.find(issue => issue.title === title);
+            let issueBody = `
+            ## Кто автор?
+            Beksultan
 
+            ## Когда был создан релиз?
+
+            ## Какая версия у релиза?
+            `;
             if (existingIssue) {
               await github.rest.issues.update({
                 owner,
                 repo,
                 issue_number: existingIssue.number,
-                body: "Updated issue description",
+                body: issueBody,
                 state: 'open',
                 labels: ['RELEASE'],
               });
@@ -71,7 +58,7 @@ jobs:
                 owner,
                 repo,
                 title,
-                body: "Updated issue description",
+                body: issueBody,
                 labels: ['RELEASE'],
               });
             }
