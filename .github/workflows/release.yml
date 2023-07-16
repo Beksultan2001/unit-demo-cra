@@ -7,8 +7,8 @@ jobs:
   issue:
     runs-on: ubuntu-latest
     steps:
-      - name: Import issue job
-        uses: ./.github/workflows/issue.yml
+      - name: Install issue
+        uses: ./.github/actions/issue
   pr:
     runs-on: ubuntu-latest
     permissions: write-all

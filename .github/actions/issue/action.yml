@@ -1,0 +1,9 @@
+name: 'Issue Action'
+description: 'Action for creating or updating an issue'
+inputs:
+  github-token:
+    description: 'GitHub token for authentication'
+    required: true
+outputs:
+  issue_number:
+    description: 'Number of the created or updated issue'
