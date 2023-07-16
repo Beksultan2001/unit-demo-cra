@@ -23,7 +23,7 @@ jobs:
 
   check-e2e:
     name: Check e2e
-    needs: setup
+    needs:  install-modules
     runs-on: ubuntu-latest
    
     steps:
@@ -52,7 +52,7 @@ jobs:
           
   check-unit:
     name: Check Unit
-    needs: setup
+    needs:  install-modules
     runs-on: ubuntu-latest
     
     steps:
