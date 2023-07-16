@@ -8,7 +8,30 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - run: npm ci
-      shell: bash
-    - run: npm run test
-      shell: bash
+    - name: Install auto-changelog
+      run: npm i -g auto-changelog
+    - name: Generate changelog
+      run: auto-changelog --commit-limit false --template keepachangelog
+    - name: Create Issue
+      id: create_issue
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const fs = require('fs');
+          const description = fs.readFileSync('CHANGELOG.md', 'utf8');
+          const [owner, repo] = '${{ github.repository }}'.split('/');
+          const version = '${{ github.ref_name }}';
+          const title = `Release ${version} by ${{ github.actor }}`;
+          const issue = { owner, repo, labels: ['RELEASE'] };
+          const issues = await github.rest.issues.listForRepo({ ...issue, state: 'all' });
+          const existingIssue = issues.data.find(i => i.title === title);
+          if (existingIssue) {
+            const update = { ...issue, issue_number: existingIssue.number, body: description, state: 'open' };
+            await github.rest.issues.update(update);
+            return existingIssue.number;
+          } else {
+            const create = { ...issue, title: title, body: description };
+            const response = await github.rest.issues.create(create);
+            return response.data.number;
+          }
