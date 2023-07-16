@@ -30,14 +30,32 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            await github.rest.issues[existingIssue
-              ? 'update'
-              : 'create']({
-              owner: process.env.GITHUB_REPOSITORY.split('/')[0],
-              repo: process.env.GITHUB_REPOSITORY.split('/')[1],
-              issue_number: existingIssue?.number,
-              title: `Release ${process.env.GITHUB_REF} by ${process.env.GITHUB_ACTOR}`,
-              body: require('fs').readFileSync('CHANGELOG.md', 'utf8'),
-              state: existingIssue ? 'open' : undefined,
-              labels: ['RELEASE'],
-            });
+            const fs = require('fs');
+
+            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+            const version = process.env.GITHUB_REF;
+            const title = `Release ${version} by ${process.env.GITHUB_ACTOR}`;
+
+            const issuesList = await github.rest.issues.listForRepo({ owner, repo, labels: ['RELEASE'], state: 'all' });
+            const existingIssue = issuesList.data.find(issue => issue.title === title);
+
+            if (existingIssue) {
+              await github.rest.issues.update({
+                owner,
+                repo,
+                issue_number: existingIssue.number,
+                body: fs.readFileSync('CHANGELOG.md', 'utf8'),
+                state: 'open',
+                labels: ['RELEASE'],
+              });
+            } else {
+              await github.rest.issues.create({
+                owner,
+                repo,
+                title,
+                body: fs.readFileSync('CHANGELOG.md', 'utf8'),
+                labels: ['RELEASE'],
+              });
+            }
+
+            
