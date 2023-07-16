@@ -9,8 +9,6 @@ jobs:
     permissions:
       issues: write
       pull-requests: write
-    outputs:
-      issue_number: ${{ steps.create_issue.outputs.result }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -24,17 +22,15 @@ jobs:
         run: npm i -g auto-changelog
       - name: Generate changelog
         run: auto-changelog --commit-limit false --template keepachangelog
-      - name: Create Issue
-        id: create_issue
+      - name: Create 
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-
             const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
             const version = process.env.GITHUB_REF;
-            const title = `Release ${version} by ${process.env.GITHUB_ACTOR}`;
+            const title = `Release ${version}`;
 
             const issuesList = await github.rest.issues.listForRepo({ owner, repo, labels: ['RELEASE'], state: 'all' });
             const existingIssue = issuesList.data.find(issue => issue.title === title);
