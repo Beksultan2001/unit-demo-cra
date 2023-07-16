@@ -4,11 +4,6 @@ on:
   push:
     branches:
        - master
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 
 jobs:
   check-tests:
@@ -30,8 +25,13 @@ jobs:
           node-version: '18'
       - name: install ci
         run: npm ci
-      - name: Build project
-
+      - name: 🎬 Build application
+        env:
+          BASE_URL: ${{ vars.BASE_URL }}
+        run: |
+          PUBLIC_URL="${BASE_URL}" npm run build
+          echo "${BASE_URL}"
+        
         if: success()
       - uses: actions/upload-artifact@v3
         with:
