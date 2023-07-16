@@ -48,7 +48,7 @@ jobs:
             const ref_name = '${{ github.ref_name }}';
             const mainTitle = `Release created By ${ref_name}`;
             const temp = {labels: ['RELEASE'],main, release};
-            const listForRepo = await github.rest.issues.listForRepo({ ...issue, state: 'all' });
+            const listForRepo = await github.rest.issues.listForRepo({ ...temp, state: 'all' });
             const isThere = listForRepo.data.find(i => i.title === mainTitle);
             if (isThere) {
               const req = { ...temp, issue_number: isThere.number, body: truncatedDescription, state: 'open' };
