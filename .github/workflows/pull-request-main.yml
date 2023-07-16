@@ -20,23 +20,3 @@ jobs:
       - name: Initialize git config, checkout, and push
         run: |
           git config user.name "GitHub Actions" && git config user.email noreply@github.com && git checkout -b release-${{ github.ref_name }} && git push origin release-${{ github.ref_name }}
-
-      - name: Create or Update Pull Request
-        id: create_or_update_pr
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const [owner, repo] = '${{ github.repository }}'.split('/');
-            
-            const head = `release-${{ github.ref_name }}`;
-
-            const prBody = `This is a pull request for release. Closes #` + process.env.GITHUB_REF;
-
-            const title = `Release ${head} by ${{ github.actor }}`;
-            const pr = { owner, repo, 'master', head, body: prBody, title };
-  
-            const pulls = await github.rest.pulls.list({ owner, repo, state: 'open', head: `${owner}:${head}` });
-            const isTherePr = pulls.data.find(p => p.title === title);
-
-            isTherePr ? await github.rest.pulls.update({ owner, repo, pull_number: isTherePr.number, body: prBody }) : await github.rest.pulls.create({ ...pr });
