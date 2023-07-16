@@ -1,5 +1,5 @@
 name: Release process - Issue
-
+run-name: issue
 on: [workflow_call]
 
 jobs:

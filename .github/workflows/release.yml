@@ -9,7 +9,7 @@ jobs:
     uses: ./.github/workflows/tests.yml
   issue:
     name: create or update issue
-    # needs: check-tests
+    needs: check-tests
     uses: ./.github/workflows/issue.yml
   pull-request:
     name: main pull request
