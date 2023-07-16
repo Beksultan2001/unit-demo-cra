@@ -6,6 +6,7 @@ jobs:
   pull-request:
     runs-on: ubuntu-latest
     permissions: write-all
+    # needs: issue
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -16,9 +17,9 @@ jobs:
         with:
           node-version: 18
 
-      # - name: Initialize git config, checkout, and push
-      #   run: |
-      #     git config user.name "GitHub Actions" && git config user.email noreply@github.com && git checkout -b release-${{ github.ref_name }} && git push origin release-${{ github.ref_name }}
+      - name: Initialize git config, checkout, and push
+        run: |
+          git config user.name "GitHub Actions" && git config user.email noreply@github.com && git checkout -b release-${{ github.ref_name }} && git push origin release-${{ github.ref_name }}
 
       - name: Create or Update Pull Request
         id: create_or_update_pr
