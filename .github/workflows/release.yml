@@ -6,8 +6,13 @@ on:
 jobs:
   issue:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    outputs:
+      issue_number: ${{ steps.create_issue.outputs.result }}
     steps:
-      - uses: ./.github/workflows/jobs/issue.yml
+      - uses: ./.github/workflows/issue.yml
   pr:
     runs-on: ubuntu-latest
     permissions: write-all
