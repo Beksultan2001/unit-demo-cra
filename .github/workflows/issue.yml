@@ -22,58 +22,38 @@ jobs:
         run: npm i -g auto-changelog
       - name: Generate changelog
         run: auto-changelog --commit-limit false --template keepachangelog
-      # - name: 🌈 Define tags
-      #   id: get_tags
-      #   run: |
-      #     CURRENT_TAG=${{ github.ref_name }} 
-      #     TIMESTAMP=$(git show -s --format=%ai ${CURRENT_TAG})
-      #     PREVIOUS_TAG=$(git describe --tags --abbrev=0 ${CURRENT_TAG}^)
-      #     echo "current=${CURRENT_TAG}" >> "$GITHUB_OUTPUT"
-      #     echo "previous=${PREVIOUS_TAG}" >> "$GITHUB_OUTPUT"
-      #     echo "timestamp=${TIMESTAMP}" >> "$GITHUB_OUTPUT"
-
-      # - name: 📃 Generate changelog
-      #   id: generate_log
-      #   run: |
-      #     CHANGELOG=$(git log --pretty=format:"- %s" "${{ steps.get_tags.outputs.previous }}...${{ steps.get_tags.outputs.current }}")
-      #     echo "Display changelog:"
-      #     echo $CHANGELOG
-      #     echo "log<<EOF" >> $GITHUB_OUTPUT
-      #     echo "${CHANGELOG}" >> "$GITHUB_OUTPUT"
-      #     echo "EOF" >> $GITHUB_OUTPUT
-
       - name: Create 
         uses: actions/github-script@v6
-         with:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
-            script: |
-              const fs = require('fs');
-              const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-              const version = process.env.GITHUB_REF;
-              const title = `Release ${version}`;
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+          
+            const fs = require('fs');
 
-              const issuesList = await github.rest.issues.listForRepo({ owner, repo, labels: ['RELEASE'], state: 'all' });
-              const existingIssue = issuesList.data.find(issue => issue.title === title);
+            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+            const version = process.env.GITHUB_REF;
+            const title = `Release ${version}`;
 
-              const textTemp=`test`;
+            const issuesList = await github.rest.issues.listForRepo({ owner, repo, labels: ['RELEASE'], state: 'all' });
+            const existingIssue = issuesList.data.find(issue => issue.title === title);
 
-              if (existingIssue) {
-                await github.rest.issues.update({
-                  owner,
-                  repo,
-                  issue_number: existingIssue.number,
-                  body: textTemp,
-                  state: 'open',
-                  labels: ['RELEASE'],
-                });
-              } else {
-                await github.rest.issues.create({
-                  owner,
-                  repo,
-                  title,
-                  body: textTemp,
-                  labels: ['RELEASE'],
-                });
-              }
+            if (existingIssue) {
+              await github.rest.issues.update({
+                owner,
+                repo,
+                issue_number: existingIssue.number,
+                body: fs.readFileSync('CHANGELOG.md', 'utf8'),
+                state: 'open',
+                labels: ['RELEASE'],
+              });
+            } else {
+              await github.rest.issues.create({
+                owner,
+                repo,
+                title,
+                body: fs.readFileSync('CHANGELOG.md', 'utf8'),
+                labels: ['RELEASE'],
+              });
+            }
 
             
