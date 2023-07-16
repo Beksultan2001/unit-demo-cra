@@ -15,7 +15,7 @@ jobs:
   pr:
     runs-on: ubuntu-latest
     permissions: write-all
-    needs: issue
+    needs: issue.issue  # 'issue' refers to the workflow name, and 'issue' refers to the job name in the 'issue.yml' workflow
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
