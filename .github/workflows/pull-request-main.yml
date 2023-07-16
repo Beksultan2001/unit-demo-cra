@@ -3,7 +3,7 @@ name: Release process - Pull Request
 on: [workflow_call]
 
 jobs:
-  pull-request:
+   pr:
     runs-on: ubuntu-latest
     permissions: write-all
     # needs: issue
