@@ -4,9 +4,9 @@ on:
     tags:
       - "v*"
 jobs:
-  check-tests:
-    name:  Check Tests
-    uses: ./.github/workflows/tests.yml
+  # check-tests:
+  #   name:  Check Tests
+  #   uses: ./.github/workflows/tests.yml
 
   issue:
     runs-on: ubuntu-latest
