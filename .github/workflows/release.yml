@@ -7,14 +7,14 @@ jobs:
   # check-tests:
   #   name:  Check Tests
   #   uses: ./.github/workflows/tests.yml
-  issue:
-    name: create or update issue
-    # needs: check-tests
-    uses: ./.github/workflows/issue.yml
-  # pull-request:
-  #   name: main pull request
-  #   needs: issue
-  #   uses: ./.github/workflows/pull-request-main.yml
+  # issue:
+  #   name: create or update issue
+  #   # needs: check-tests
+  #   uses: ./.github/workflows/issue.yml
+  pull-request:
+    name: main pull request
+    # needs: issue
+    uses: ./.github/workflows/pull-request-main.yml
     
   # deploy: 
   #   needs: [issue,pull-request]
