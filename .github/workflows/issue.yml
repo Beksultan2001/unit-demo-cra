@@ -8,10 +8,6 @@ jobs:
     permissions:
       issues: write
       pull-requests: write
-
-    outputs:
-      issue_number: ${{ steps.create_issue.outputs.result }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -29,34 +25,35 @@ jobs:
       - name: Generate changelog
         run: auto-changelog --commit-limit false --template keepachangelog
 
-      - name: Create Issue
-        id: create_issue
+      - name: Update or create Issue
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
           
             const fs = require('fs');
-            const description = fs.readFileSync('CHANGELOG.md', 'utf8');
             const MAX_BODY_LENGTH = 4000;
 
             // Truncate the description if it exceeds the maximum length
-            const truncatedDescription = description.length > MAX_BODY_LENGTH
-              ? description.slice(0, MAX_BODY_LENGTH)
-              : description;
+            const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
+            const truncatedDescription = changelog.length > MAX_BODY_LENGTH
+              ? changelog.slice(0, MAX_BODY_LENGTH)
+              : changelog;
 
-            const [owner, repo] = '${{ github.repository }}'.split('/');
-            const version = '${{ github.ref_name }}';
-            const title = `Release created By ${version}`;
-            const issue = { owner, repo, labels: ['RELEASE'] };
-            const issues = await github.rest.issues.listForRepo({ ...issue, state: 'all' });
-            const isThere = issues.data.find(i => i.title === title);
+            const [name, repository] = '${{ github.repository }}'.split('/');
+            const ref_name = '${{ github.ref_name }}';
+            const value = `Release-${ref_name}`;
+
+            const temp = { name, repository, labels: ['RELEASE'] };
+
+            const list = await github.rest.issues.listForRepo({ ...temp, state: 'all' });
+            const isThere = list.data.find(i => i.title === value);
             if (isThere) {
-              const update = { ...issue, issue_number: isThere.number, body: truncatedDescription, state: 'open' };
+              const update = { ...temp, issue_number: isThere.number, body: truncatedDescription, state: 'open' };
               await github.rest.issues.update(update);
               return isThere.number;
             } else {
-              const create = { ...issue, title: title, body: truncatedDescription };
+              const create = { ...temp, title: value, body: truncatedDescription };
               const response = await github.rest.issues.create(create);
               return response.data.number;
             }
