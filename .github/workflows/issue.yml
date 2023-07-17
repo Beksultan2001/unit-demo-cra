@@ -37,26 +37,26 @@ jobs:
           script: |
           
             const fs = require('fs');
-            const changeLog = fs.readFileSync('CHANGELOG.md', 'utf8');
+            const description = fs.readFileSync('CHANGELOG.md', 'utf8');
             const MAX_BODY_LENGTH = 4000;
 
-            // Truncate the changeLog if it exceeds the maximum length
-            const truncatedDescription = changeLog.length > MAX_BODY_LENGTH
-              ? changeLog.slice(0, MAX_BODY_LENGTH)
-              : changeLog;
+            // Truncate the description if it exceeds the maximum length
+            const truncatedDescription = description.length > MAX_BODY_LENGTH
+              ? description.slice(0, MAX_BODY_LENGTH)
+              : description;
 
-            const [mainOwn, mainRepo] = '${{ github.repository }}'.split('/');
-            const refVersion = '${{ github.ref_name }}';
-            const value = `Release created ${refVersion}`;
-            const temp = { mainOwn, mainRepo, labels: ['RELEASE'] };
-            const list = await github.rest.issues.listForRepo({ ...issue, state: 'all' });
-            const isThere = list.data.find(i => i.title === value);
+            const [owner, repo] = '${{ github.repository }}'.split('/');
+            const version = '${{ github.ref_name }}';
+            const title = `Release created By ${version}`;
+            const issue = { owner, repo, labels: ['RELEASE'] };
+            const issues = await github.rest.issues.listForRepo({ ...issue, state: 'all' });
+            const isThere = issues.data.find(i => i.title === title);
             if (isThere) {
-              const update = { ...temp, issue_number: isThere.number, body: truncatedDescription, state: 'open' };
+              const update = { ...issue, issue_number: isThere.number, body: truncatedDescription, state: 'open' };
               await github.rest.issues.update(update);
               return isThere.number;
             } else {
-              const create = { ...temp, title: value, body: truncatedDescription };
+              const create = { ...issue, title: title, body: truncatedDescription };
               const response = await github.rest.issues.create(create);
               return response.data.number;
             }
