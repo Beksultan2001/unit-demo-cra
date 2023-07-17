@@ -35,23 +35,15 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
           
       - name: Issue
-        env:
-          GH_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
         run: |
           ISSUE_TITLE="Release ${{ github.ref_name }}"
           ISSUE_BODY=$(cat << EOF
           ### Version ${{ github.ref_name }}
-
           Author ${{ github.actor }}
-
           Date: ${{ steps.get_tags.outputs.timestamp }}
-          
           Changelog:
-
           ${{ steps.generate_log.outputs.log }}
-
           Enter into the actions
-
           [Deploy application](https://github.com/Beksultan/unit-demo-cra/actions/workflows/build.yml)
           EOF
           )
