@@ -8,6 +8,10 @@ jobs:
     permissions:
       issues: write
       pull-requests: write
+
+    outputs:
+      issue_number: ${{ steps.create_issue.outputs.result }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -25,35 +29,36 @@ jobs:
       - name: Generate changelog
         run: auto-changelog --commit-limit false --template keepachangelog
 
-      - name: Update or create Issue
+      - name: Create Issue
+        id: create_issue
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
           
             const fs = require('fs');
+            const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
             const MAX_BODY_LENGTH = 4000;
 
             // Truncate the description if it exceeds the maximum length
-            const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
             const truncatedDescription = changelog.length > MAX_BODY_LENGTH
               ? changelog.slice(0, MAX_BODY_LENGTH)
               : changelog;
 
             const [name, repository] = '${{ github.repository }}'.split('/');
-            const ref_name = '${{ github.ref_name }}';
-            const value = `Release-${ref_name}`;
+            const version = '${{ github.ref_name }}';
+            const title = `Release created By ${version}`;
 
             const temp = { name, repository, labels: ['RELEASE'] };
 
             const list = await github.rest.issues.listForRepo({ ...temp, state: 'all' });
-            const isThere = list.data.find(i => i.title === value);
+            const isThere = list.data.find(i => i.title === title);
             if (isThere) {
               const update = { ...temp, issue_number: isThere.number, body: truncatedDescription, state: 'open' };
               await github.rest.issues.update(update);
               return isThere.number;
             } else {
-              const create = { ...temp, title: value, body: truncatedDescription };
+              const create = { ...temp, title: title, body: truncatedDescription };
               const response = await github.rest.issues.create(create);
               return response.data.number;
             }
