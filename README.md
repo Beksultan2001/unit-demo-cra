@@ -1,3 +1,5 @@
+По всем вопросам писать в Telegram: https://t.me/beka_omirzak. Необходимо скинуть мне свой GitHub, я добавлю тебя в качестве collaborator.
+
 # Инфраструктура 
 - В проекте для соответствия сообщений о коммитах формату conventional commits используются commitlint и husky.
 
