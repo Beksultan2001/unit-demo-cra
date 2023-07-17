@@ -41,17 +41,13 @@ jobs:
               : changelog;
 
             const ref_name = '${{ github.ref_name }}';
-            const value = `Release created By ${ref_name}`;
+            const value = `Release--${ref_name}`;
             const [owner, repo] = '${{ github.repository }}'.split('/');
             const temp = {labels: ['RELEASE'], owner, repo};
             const list = await github.rest.issues.listForRepo({ ...temp, state: 'all' });
             const isThere = list.data.find(i => i.title === value);
-            if (isThere) {
-              const update = { ...temp, issue_number: isThere.number, body: truncatedDescription, state: 'open' };
-              await github.rest.issues.update(update);
-            } else {
-              const create = { ...temp, title: value, body: truncatedDescription };
-              const response = await github.rest.issues.create(create);
-            }
+            
+            isThere ?  await github.rest.issues.update({ ...temp, issue_number: isThere.number, body: truncatedDescription, state: 'open' }) : await github.rest.issues.create({ ...temp, title: value, body: truncatedDescription });
+            
 
             
