@@ -3,7 +3,7 @@ name: Build
 on:
   push:
     branches:
-       - master
+      - master
 
 jobs:
   check-tests:
@@ -14,7 +14,7 @@ jobs:
     needs: check-tests
     name: Build-deploy-project
     runs-on: ubuntu-latest
-      
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -22,22 +22,22 @@ jobs:
           token: ${{ secrets.GH_ACCESS_TOKEN }}
       - uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: "18"
       - name: install ci
         run: npm ci
-    
+
       - name: Build Project
         env:
           BASE_URL: ${{ vars.BASE_URL }}
         run: PUBLIC_URL="${BASE_URL}" npm run build
-        
+
         if: success()
       - uses: actions/upload-artifact@v3
         with:
           name: build
           path: build/
           retention-days: 30
-        
+
       - name: Deploy to GitHub Pages
         id: deployment
         env:
@@ -46,7 +46,7 @@ jobs:
           npm i gh-pages
           git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
           npx gh-pages -d build -u "github-actions-bot <support+actions@github.com>"
-      
+
         if: success()
       - name: Close Issue
         env:
@@ -59,4 +59,3 @@ jobs:
           if [ ! -z "$ISSUE_ID" ]; then
             gh issue close $ISSUE_ID -c "[Deployment done](https://Beksultan2001.github.io/unit-demo-cra/)" -r "completed"
           fi
-          

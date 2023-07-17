@@ -7,7 +7,6 @@ on:
       - synchronize
 
 jobs:
-
   pull-request-merge:
     runs-on: ubuntu-latest
 
@@ -20,7 +19,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Install dependencies
         run: npm ci
@@ -33,13 +32,13 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-             if ((await github.checks.listForRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: context.sha
-              })).data.check_runs.some(check => check.conclusion === 'failure')) {
-                core.setFailed('There are failing checks. Blocking merge.');
-              }
-      - name: merge pull 
+            if ((await github.checks.listForRef({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               ref: context.sha
+             })).data.check_runs.some(check => check.conclusion === 'failure')) {
+               core.setFailed('There are failing checks. Blocking merge.');
+             }
+      - name: merge pull
         if: ${{ failure() }}
         run: echo "Failed Merge." && exit 1
